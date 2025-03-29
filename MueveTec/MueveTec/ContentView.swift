@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  MueveTec
 //
-//  Created by Alumno on 28/03/25.
+//  Created by Ranferi on 28/03/25.
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ struct ContentView: View {
     var body: some View {
         TabView{
             Tab("Mapa", systemImage: "sailboat") {
-                Text("UNO")
+                MapaView()
             }
             
             Tab("Rutas", systemImage: "wind") {
