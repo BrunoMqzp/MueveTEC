@@ -19,7 +19,7 @@ struct ContentView: View {
             }
             
             Tab("Servicios", systemImage: "house.fill"){
-                ServiciosView()
+                Text("TRES")
             }
         }
     }
