@@ -15,7 +15,7 @@ struct ContentView: View {
             }
             
             Tab("Rutas", systemImage: "wind") {
-                Text("DOS")
+                RevolucionView()
             }
             
             Tab("Servicios", systemImage: "house.fill"){
