@@ -2,17 +2,39 @@
 //  AjustesView.swift
 //  MueveTec
 //
-//  Created by Alumno on 29/03/25.
+//  Created by Frouta on 29/03/25.
 //
 
 import SwiftUI
 
 struct AjustesView: View {
+    @Environment(\.dismiss) private var dismiss
+    var color: Color = .blueFondo
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Button(action: {
+            dismiss()
+        }) {
+            HStack{
+                Image(systemName: "chevron.backward")
+                    .aspectRatio(contentMode: .fit)
+                    .font(.title)
+                    .foregroundColor(color)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading)
+            .padding(.top,12)
+        }
+        NavigationStack {
+            Form {
+                Section("Tema") {
+                    DarkModeToggle()
+                }
+            }
+        }
+            .navigationBarBackButtonHidden(true)
     }
 }
-
 #Preview {
     AjustesView()
 }

@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  MueveTec
 //
-//  Created by Alumno on 28/03/25.
+//  Created by Frouta on 28/03/25.
 //
 
 import SwiftUI
@@ -19,7 +19,7 @@ struct ContentView: View {
             }
             
             Tab("Servicios", systemImage: "house.fill"){
-                Text("TRES")
+                ServiciosView()
             }
         }
     }

@@ -1,13 +1,15 @@
 //
-//  FAQModel.swift
+//  InformacionModel.swift
 //  MueveTec
 //
-//  Created by Alumno on 29/03/25.
+//  Created by Frouta on 29/03/25.
 //
 import SwiftUI
 
-struct InformacionModel{
-    let pid = UUID()
+struct InformacionModel: Identifiable{
+
+    let id = UUID()
+    let numeroPregunta: Int
     var pregunta: String
     var respuesta: String
 }
