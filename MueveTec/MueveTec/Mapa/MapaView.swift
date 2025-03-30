@@ -16,9 +16,11 @@ struct MapaView: View {
     
     @State private var busRoutes: [BusRoute] = []
     @State private var showLabels: Bool = true
-    @State private var showSheet: Bool = true
 
-    let routeColors: [Color] = [.blue, .red, .orange, .brown]
+    
+    let routeColors: [Color] = [.red, .brown, .orange, .blue]
+
+    @State private var showSheet: Bool = true
 
     var body: some View {
         Map(coordinateRegion: $region, annotationItems: busStops()) { stop in
@@ -129,7 +131,7 @@ struct MapaView: View {
 
 
     func fetchBusRoutes() {
-        guard let url = URL(string: "http://10.22.220.201:5000/api/busRoutes") else { return }
+        guard let url = URL(string: "http://10.22.214.232:5000/api/busRoutes") else { return }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else { return }
