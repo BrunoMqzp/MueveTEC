@@ -27,6 +27,34 @@ struct EstacionView: View {
             // Mostrar la hora de llegada
             Text("Hora de llegada: \(calcularHoraLlegada())")
                 .font(.title)
+            
+            HStack{
+                Image(systemName: "circle.fill")
+                    .foregroundStyle(.green)
+                Text("En ruta")
+                    .font(.title)
+                    .bold()
+            }
+            
+            HStack{
+                Grid{
+                    GridRow{
+                        ForEach(0..<2) { _ in
+                            Color.green
+                        }
+                        ForEach(2..<5) {_ in Color.red}
+                        ForEach(5..<8) {_ in Color.green}
+                        ForEach(8..<9) {_ in Color.gray}
+                    }
+                    GridRow{
+                        ForEach(0..<5) {_ in Color.red}
+                        ForEach(5..<8) {_ in Color.green}
+                    }
+                }
+                VStack{
+                    Text("8/16")
+                }
+            }
 
             // Mostrar la ruta correspondiente
             if let routeName = obtenerRuta() {
@@ -37,6 +65,7 @@ struct EstacionView: View {
             HStack {
                 Spacer()
                 Text("Resto de la ruta")
+                    .font(.title2)
                 Spacer()
             }
 
