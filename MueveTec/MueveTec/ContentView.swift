@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  MueveTec
 //
-//  Created by Frouta on 28/03/25.
+//  Created by Alumno on 28/03/25.
 //
 
 import SwiftUI
