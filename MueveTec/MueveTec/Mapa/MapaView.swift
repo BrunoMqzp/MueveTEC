@@ -8,6 +8,7 @@ extension MKCoordinateSpan: Equatable {
 }
 
 struct MapaView: View {
+    @State private var ruta: String = ""
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 25.651426, longitude: -100.289570), // Tec de Monterrey
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01) // Default zoom
@@ -15,8 +16,11 @@ struct MapaView: View {
     
     @State private var busRoutes: [BusRoute] = []
     @State private var showLabels: Bool = true
+
     
     let routeColors: [Color] = [.red, .brown, .orange, .blue]
+
+    @State private var showSheet: Bool = true
 
     var body: some View {
         Map(coordinateRegion: $region, annotationItems: busStops()) { stop in
@@ -29,7 +33,7 @@ struct MapaView: View {
                             .foregroundColor(color)
                             .font(.title)
                     }
-                    
+
                     Text(stop.name)
                         .font(.caption)
                         .padding(5)
@@ -39,26 +43,6 @@ struct MapaView: View {
                 }
             }
         }
-        .overlay(
-            GeometryReader { geometry in
-                ZStack {
-                    ForEach(busRoutes.indices, id: \.self) { index in
-                        let route = busRoutes[index]
-                        let color = routeColors[index % routeColors.count]
-                        Path { path in
-                            let stops = route.stops.map { $0.coordinate }
-                            if let firstStop = stops.first {
-                                path.move(to: CGPoint(x: geometry.size.width * firstStop.longitude, y: geometry.size.height * firstStop.latitude))
-                                for stop in stops.dropFirst() {
-                                    path.addLine(to: CGPoint(x: geometry.size.width * stop.longitude, y: geometry.size.height * stop.latitude))
-                                }
-                            }
-                        }
-                        .stroke(color, lineWidth: 3)
-                    }
-                }
-            }
-        )
         .onAppear {
             fetchBusRoutes()
         }
@@ -67,12 +51,85 @@ struct MapaView: View {
                 showLabels = newSpan.latitudeDelta < 0.02 // Toggle label visibility
             }
         }
+        .onChange(of: ruta) { newRuta in
+            fetchSingleRoute(nombre: newRuta)
+        }
+        .sheet(isPresented: $showSheet) {
+            GeometryReader { geometry in
+                VStack(spacing: 10) {
+                    if geometry.size.height > 120 {
+                        AllRoutesView(ruta: $ruta)
+                    } else {
+                        HStack {
+                            if(ruta != ""){
+                                HStack{
+                                    Spacer()
+                                    Text("\(ruta)")
+                                        .font(.largeTitle)
+                                        .bold()
+                                        .padding()
+                                    Button(action:{
+                                        fetchBusRoutes()
+                                        ruta = ""
+                                    }, label: {
+                                            Image(systemName: "multiply.circle.fill")
+                                            .resizable(resizingMode: .stretch)
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 30.0, height: 30.0)
+                                    })
+                                    Spacer()
+                                    
+                                }
+                                
+                            }else{
+                                Spacer()
+                                Text("Todas las rutas")
+                                    .font(.largeTitle)
+                                    .bold()
+                                    .padding()
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+            .presentationDetents([.height(120), .medium, .large])
+            .presentationCornerRadius(20)
+            .presentationBackground(.thinMaterial)
+            .presentationBackgroundInteraction(.enabled(upThrough: .height(120)))
+            .interactiveDismissDisabled()
+            .bottomMaskForSheet()
+        }
     }
-    
+
     func busStops() -> [BusStop] {
         return busRoutes.flatMap { $0.stops }
     }
-    
+
+    func fetchSingleRoute(nombre: String) {
+        guard let url = URL(string: "http://10.22.220.201:5000/api/busRoutes/\(nombre)") else { return }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Error fetching single route:", error?.localizedDescription ?? "Unknown error")
+                return
+            }
+            
+            do {
+                let route = try JSONDecoder().decode(BusRoute.self, from: data)
+                DispatchQueue.main.async {
+                    self.busRoutes.removeAll()  // ✅ Clear existing routes
+                    self.busRoutes.append(route) // ✅ Append the new route
+                }
+            } catch {
+                print("Error decoding single route JSON:", error)
+            }
+        }.resume()
+    }
+
+
     func fetchBusRoutes() {
         guard let url = URL(string: "http://10.22.214.232:5000/api/busRoutes") else { return }
         
@@ -89,6 +146,7 @@ struct MapaView: View {
         }.resume()
     }
 }
+
 
 struct BusRoute: Identifiable, Decodable {
     let id = UUID()
