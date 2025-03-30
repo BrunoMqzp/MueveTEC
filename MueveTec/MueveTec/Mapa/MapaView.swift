@@ -16,8 +16,9 @@ struct MapaView: View {
     
     @State private var busRoutes: [BusRoute] = []
     @State private var showLabels: Bool = true
+    @State private var showMore: Bool = false
+    @State private var selectedStop: BusStop? // 🔹 Guarda la estación seleccionada
 
-    
     let routeColors: [Color] = [.red, .brown, .orange, .blue]
 
     @State private var showSheet: Bool = true
@@ -25,26 +26,33 @@ struct MapaView: View {
     var body: some View {
         Map(coordinateRegion: $region, annotationItems: busStops()) { stop in
             MapAnnotation(coordinate: stop.coordinate) {
-                VStack {
-                    if let route = busRoutes.first(where: { $0.stops.contains(where: { $0.id == stop.id }) }),
-                       let index = busRoutes.firstIndex(where: { $0.id == route.id }) {
-                        let color = routeColors[index % routeColors.count]
-                        Image(systemName: "bus")
-                            .foregroundColor(color)
-                            .font(.title)
+                Button(action: {
+                    selectedStop = stop // ✅ Guarda la estación seleccionada
+                    showMore = true
+                    print("🚏 Estación seleccionada: \(stop.name), Coordenadas: \(stop.coordinate)")
+                }) {
+                    VStack {
+                        if let route = busRoutes.first(where: { $0.stops.contains(where: { $0.id == stop.id }) }),
+                           let index = busRoutes.firstIndex(where: { $0.id == route.id }) {
+                            let color = routeColors[index % routeColors.count]
+                            Image(systemName: "bus")
+                                .foregroundColor(color)
+                                .font(.title)
+                        }
+                        
+                        Text(stop.name)
+                            .font(.caption)
+                            .padding(5)
+                            .background(Color.white.opacity(0.8))
+                            .cornerRadius(5)
+                            .opacity(showLabels ? 1 : 0) // Smooth fade
                     }
-
-                    Text(stop.name)
-                        .font(.caption)
-                        .padding(5)
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(5)
-                        .opacity(showLabels ? 1 : 0) // Smooth fade
                 }
             }
         }
         .onAppear {
             fetchBusRoutes()
+            showSheet = true
         }
         .onChange(of: region.span) { newSpan in
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -54,40 +62,63 @@ struct MapaView: View {
         .onChange(of: ruta) { newRuta in
             fetchSingleRoute(nombre: newRuta)
         }
+        .onDisappear {
+            showSheet = false
+        }
         .sheet(isPresented: $showSheet) {
             GeometryReader { geometry in
                 VStack(spacing: 10) {
                     if geometry.size.height > 120 {
-                        AllRoutesView(ruta: $ruta)
+                        if(showMore == true){
+                            EstacionView(estacion: selectedStop!, busRoutes: busRoutes)
+                        }
+                        else{
+                            AllRoutesView(ruta: $ruta)
+                        }
                     } else {
                         HStack {
-                            if(ruta != ""){
-                                HStack{
+                            if ruta != "" {
+                                HStack {
                                     Spacer()
                                     Text("\(ruta)")
                                         .font(.largeTitle)
                                         .bold()
                                         .padding()
-                                    Button(action:{
+                                    Button(action: {
                                         fetchBusRoutes()
                                         ruta = ""
                                     }, label: {
-                                            Image(systemName: "multiply.circle.fill")
+                                        Image(systemName: "multiply.circle.fill")
                                             .resizable(resizingMode: .stretch)
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 30.0, height: 30.0)
                                     })
                                     Spacer()
-                                    
                                 }
-                                
-                            }else{
-                                Spacer()
-                                Text("Todas las rutas")
-                                    .font(.largeTitle)
-                                    .bold()
-                                    .padding()
-                                Spacer()
+                            } else {
+                                if(showMore != true){
+                                    Spacer()
+                                    Text("Todas las rutas")
+                                        .font(.largeTitle)
+                                        .bold()
+                                        .padding()
+                                    Spacer()
+                                }else{
+                                    Spacer()
+                                    Text("\(selectedStop!.name)")
+                                        .font(.largeTitle)
+                                        .bold()
+                                        .padding()
+                                    Button(action: {
+                                        showMore = false
+                                    }, label: {
+                                        Image(systemName: "multiply.circle.fill")
+                                            .resizable(resizingMode: .stretch)
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 30.0, height: 30.0)
+                                    })
+                                    Spacer()
+                                }
                             }
                         }
                     }
@@ -120,15 +151,14 @@ struct MapaView: View {
             do {
                 let route = try JSONDecoder().decode(BusRoute.self, from: data)
                 DispatchQueue.main.async {
-                    self.busRoutes.removeAll()  // ✅ Clear existing routes
-                    self.busRoutes.append(route) // ✅ Append the new route
+                    self.busRoutes.removeAll()
+                    self.busRoutes.append(route)
                 }
             } catch {
                 print("Error decoding single route JSON:", error)
             }
         }.resume()
     }
-
 
     func fetchBusRoutes() {
         guard let url = URL(string: "http://10.22.214.232:5000/api/busRoutes") else { return }
@@ -147,7 +177,6 @@ struct MapaView: View {
     }
 }
 
-
 struct BusRoute: Identifiable, Decodable {
     let id = UUID()
     let name: String
@@ -158,7 +187,7 @@ struct BusStop: Identifiable, Decodable {
     let id = UUID()
     let name: String
     let coordinate: CLLocationCoordinate2D
-    let minutes:String
+    let minutes: String
     
     enum CodingKeys: String, CodingKey {
         case name
