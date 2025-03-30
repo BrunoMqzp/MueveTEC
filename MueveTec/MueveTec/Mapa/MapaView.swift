@@ -109,7 +109,7 @@ struct MapaView: View {
     }
 
     func fetchSingleRoute(nombre: String) {
-        guard let url = URL(string: "http://10.22.220.201:5000/api/busRoutes/\(nombre)") else { return }
+        guard let url = URL(string: "http://10.22.214.232:5000/api/busRoutes/\(nombre)") else { return }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
@@ -158,10 +158,12 @@ struct BusStop: Identifiable, Decodable {
     let id = UUID()
     let name: String
     let coordinate: CLLocationCoordinate2D
+    let minutes:String
     
     enum CodingKeys: String, CodingKey {
         case name
         case location
+        case minutes
     }
     
     enum LocationKeys: String, CodingKey {
@@ -176,6 +178,7 @@ struct BusStop: Identifiable, Decodable {
         let coordinates = try locationContainer.decode([Double].self, forKey: .coordinates)
         
         coordinate = CLLocationCoordinate2D(latitude: coordinates[1], longitude: coordinates[0])
+        minutes = try container.decode(String.self, forKey: .minutes)
     }
 }
 
